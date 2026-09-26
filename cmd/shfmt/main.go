@@ -109,6 +109,10 @@ var (
 )
 
 func main() {
+	// support calling by linker: /system/bin/linker64 shfmt ...
+	if len(os.Args) >= 1 && (filepath.Base(os.Args[0]) == "linker" || filepath.Base(os.Args[0]) == "linker64") {
+		os.Args = os.Args[1:]
+	}
 	flag.Usage = func() {
 		fmt.Fprint(os.Stderr, `usage: shfmt [flags] [path ...]
 

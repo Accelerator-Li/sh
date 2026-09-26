@@ -1,0 +1,49 @@
+name: Build for Android
+run-name: Build for Android
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build ${{ matrix.abi }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - abi: arm64-v8a
+            arch: arm64
+            goarm: ''
+          - abi: armeabi-v7a
+            arch: arm
+            goarm: '7'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Build
+        env:
+          CGO_ENABLED: '0'
+          GOOS: android
+          GOARCH: ${{ matrix.arch }}
+          GOARM: ${{ matrix.goarm }}
+        run: |
+          mkdir -p dist
+          go build -trimpath -ldflags="-s -w" -o "dist/shfmt" ./cmd/shfmt
+          echo "result:"
+          file "dist/shfmt"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-${{ matrix.abi }}
+          if-no-files-found: error
+          path: |
+            dist/*
